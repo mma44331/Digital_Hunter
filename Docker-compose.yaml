@@ -5,7 +5,7 @@ services:
   service_a:
     build:
       context: .
-      dockerfile: server_a/Dockerfile
+      dockerfile: service_a/Dockerfile
     container_name: service_a
 
     environment:
@@ -17,10 +17,8 @@ services:
     depends_on:
       kafka:
         condition: service_healthy
-      elastic:
+      elasticsearch:
         condition: service_healthy
-
-
 
 
   kafka:
@@ -50,7 +48,7 @@ services:
       - kafka_kraft:/var/lib/kafka/data
 
 
-  elastic:
+  elasticsearch:
       image: docker.elastic.co/elasticsearch/elasticsearch:9.3.0
       container_name: elasticsearch
       environment:
