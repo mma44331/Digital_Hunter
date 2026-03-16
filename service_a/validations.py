@@ -26,12 +26,13 @@ class Validation:
         return message
 
     def distance_comparison(self,message):
-        target = self.mongo_db.get_by_target_id(message['signal_id'])
-        distance = 0
-        if target:
-            lat = target['lon']
-            lon = target['lon']
-            distance = haversine_km(lat,lon,message['lat'],message['lon'])
-        message['distance'] = distance
+        if message.get('type') == 'mobile_vehicle' or message.get('type') == 'mobile_vehicle':
+            target = self.mongo_db.get_by_target_id(message['signal_id'])
+            distance = 0
+            if target:
+                reported_lat = target['reported_lat']
+                reported_lon = target['reported_lon']
+                distance = haversine_km(lat,lon,message['lat'],message['lon'])
+            message['distance'] = distance
         return message
 

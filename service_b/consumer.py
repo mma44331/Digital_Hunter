@@ -3,19 +3,18 @@ import json
 from confluent_kafka import Consumer
 
 class KafkaConsumer:
-    def __init__(self, logger,bootstrap_server,topic_name,validate,mongo_db):
+    def __init__(self, logger,bootstrap_server,topic_name,mongo_db):
         self.logger = logger
         self.mongo_db = mongo_db
-        self.validate = validate
         self.consumer = Consumer({'bootstrap.server':bootstrap_server,
-                                  'group_id':'service_a',
+                                  'group_id':'service_b',
                                   'auto.offset.reset':'earliest'})
         self.topic_name = topic_name
 
 
-    def start_intel(self):
+    def start_attack(self):
         self.consumer.subscribe([self.topic_name])
-        self.logger('info','subscribed to topic intel')
+        self.logger('info','subscribed to topic atteck')
         while True:
             try:
                 msg = self.consumer.poll(1.0)
@@ -24,12 +23,7 @@ class KafkaConsumer:
                     continue
 
                 message = json.loads(msg.value().decode('utf-8'))
-                flage = self.validate.validate_fields(message)
-                if not flage:
-                    continue
-                message = self.validate.crucifixion(message)
-                message = self.validate.distance_comparison(message)
-                self.mongo_db.insert_one(message)
+                self.mongo_db.update(message)
                 self.logger('info','Sending success to Mongo')
             except Exception as e:
                 self.logger('error', e)
