@@ -1,23 +1,40 @@
+import json
+
 from confluent_kafka import Consumer
 
-class KafkaConcumer:
-    def __init__(self, logger,bootstrap_server,topic_intel,topic_attack,topic_damage):
+class KafkaConsumer:
+    def __init__(self, logger,bootstrap_server,topic_intel,validate,mongo_db):
         self.logger = logger
+        self.mongo_db = mongo_db
+        self.validate = validate
         self.consumer = Consumer({'bootstrap.server':bootstrap_server,
                                   'group_id':'all_topics',
                                   'auto.offset.reset':'earliest'})
         self.topic_intel = topic_intel
-        self.topic_attack = topic_attack
-        self.topic_damage = topic_damage
+
 
     def start_intel(self):
         self.consumer.subscribe([self.topic_intel])
         self.logger('info','subscribed to topic intel')
         while True:
-            msg = self.consumer.poll(1.0)
-            if msg is None:
-                self.logger('info', 'There are currently no messages in the intel topic')
-                continue
+            try:
+                msg = self.consumer.poll(1.0)
+                if msg is None:
+                    self.logger('info', 'There are currently no messages in the intel topic')
+                    continue
+
+                message = json.loads(msg.value().decode('utf-8'))
+                flage = self.validate.validate_fields(message)
+                if not flage:
+                    continue
+                message = self.validate.crucifixion(message)
+                message = self.validate.distance_comparison(message)
+                self.mongo_db.insert_one(message)
+                self.logger('info','Sending success to Mongo')
+            except Exception as e:
+                self.logger('error', e)
+
+
 
 
 
