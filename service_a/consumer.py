@@ -3,12 +3,12 @@ import json
 from confluent_kafka import Consumer
 
 class KafkaConsumer:
-    def __init__(self, logger,bootstrap_server,topic_name,validate,mongo_db):
+    def __init__(self, logger,bootstrap_servers,topic_name,validate,mongo_db):
         self.logger = logger
         self.mongo_db = mongo_db
         self.validate = validate
-        self.consumer = Consumer({'bootstrap.server':bootstrap_server,
-                                  'group_id':'service_a',
+        self.consumer = Consumer({'bootstrap.servers':bootstrap_servers,
+                                  'group.id':'service_a',
                                   'auto.offset.reset':'earliest'})
         self.topic_name = topic_name
 
@@ -22,8 +22,12 @@ class KafkaConsumer:
                 if msg is None:
                     self.logger('info', 'There are currently no messages in the intel topic')
                     continue
+                if msg.error():
+                    self.logger('error','message error')
 
-                message = json.loads(msg.value().decode('utf-8'))
+
+                message = msg.value().decode('utf-8')
+                message = json.loads(message)
                 flage = self.validate.validate_fields(message)
                 if not flage:
                     continue
@@ -32,7 +36,7 @@ class KafkaConsumer:
                 self.mongo_db.insert_one(message)
                 self.logger('info','Sending success to Mongo')
             except Exception as e:
-                self.logger('error', e)
+                self.logger('error', str(e))
 
 
 

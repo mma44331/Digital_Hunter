@@ -5,7 +5,7 @@ from shards.logger import log_event as logger
 
 config = Config()
 mongo_db = MongoDB(logger)
-consumer = KafkaConsumer(logger,config.bootstrap_server,config.topic_attack,mongo_db)
+consumer = KafkaConsumer(logger,config.bootstrap_servers,config.topic_damage,mongo_db)
 
 
 if __name__ == "__main__":

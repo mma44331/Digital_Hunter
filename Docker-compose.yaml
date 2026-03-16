@@ -1,6 +1,20 @@
 version: "3.8"
 
 services:
+  simulator:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    container_name: simulator
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      PYTHONUNBUFFERED: 1
+    depends_on:
+      kafka:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+
 
   service_a:
     build:
@@ -9,11 +23,13 @@ services:
     container_name: service_a
 
     environment:
-      BOOTSTRAP_SERVER: kafka:9092
+      PYTHONUNBUFFERED: 1
+      BOOTSTRAP_SERVERS: kafka:9092
       TOPIC_INTEL: intel
       TOPIC_INTEL_SIGNALS_DLQ: intel_signals_dlq
       DB_NAME: target_bank
       COLL_NAME: targets
+      MONGO_URI: mongodb://mongodb:27017
     depends_on:
       kafka:
         condition: service_healthy
@@ -26,7 +42,9 @@ services:
       dockerfile: service_b/Dockerfile
     container_name: service_b
     environment:
-      BOOTSTRAP_SERVER: kafka:9092
+      PYTHONUNBUFFERED: 1
+      MONGO_URI: mongodb://mongodb:27017
+      BOOTSTRAP_SERVERS: kafka:9092
       TOPIC_ATTACK: attack
       DB_NAME: target_bank
       COLL_NAME: targets
@@ -42,7 +60,9 @@ services:
       dockerfile: service_c/Dockerfile
     container_name: service_c
     environment:
-      BOOTSTRAP_SERVER: kafka:9092
+      MONGO_URI: mongodb://mongodb:27017
+      PYTHONUNBUFFERED: 1
+      BOOTSTRAP_SERVERS: kafka:9092
       TOPIC_DAMAGE: damage
       DB_NAME: target_bank
       COLL_NAME: targets
@@ -98,7 +118,7 @@ services:
       ports:
         - "9200:9200"
       healthcheck:
-        test: ["CMD-SHELL","curl -s https://localhost:9200 || exit 1"]
+        test: ["CMD-SHELL","curl -s http://localhost:9200 || exit 1"]
         interval: 10s
         timeout: 10s
         retries: 120

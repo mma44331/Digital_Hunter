@@ -3,14 +3,14 @@ from haversine import haversine_km
 from confluent_kafka import Producer
 
 class Validation:
-    def __init__(self,logger,bootstrap_server,topic,mongo_db):
+    def __init__(self,logger,bootstrap_servers,topic,mongo_db):
         self.logger = logger
         self.topic = topic
         self.mongo_db = mongo_db
-        self.producer = Producer({'bootstrap.server': bootstrap_server})
+        self.producer = Producer({'bootstrap.servers': bootstrap_servers})
 
     def validate_fields(self, message):
-        if message['signal_id'] is None or message['entity_id'] is None or message['reported_lat'] is None or message['reported_lon'] is None:
+        if message.get('signal_id') is None or message.get('entity_id') is None or message.get('reported_lat') is None or message.get('reported_lon') is None:
             message['error'] = 'missing critical fields'
             json_data = json.dumps(message, default=str).encode('utf-8')
             self.producer.produce(self.topic,json_data)
@@ -32,7 +32,7 @@ class Validation:
             if target:
                 reported_lat = target['reported_lat']
                 reported_lon = target['reported_lon']
-                distance = haversine_km(lat,lon,message['lat'],message['lon'])
+                distance = haversine_km(reported_lat,reported_lon,message['reported_lat'],message['reported_lon'])
             message['distance'] = distance
         return message
 

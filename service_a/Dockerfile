@@ -10,4 +10,4 @@ COPY shards/ ./shards/
 
 COPY service_a/ .
 
-CMD ["python","main"]
+CMD ["python","main.py"]
